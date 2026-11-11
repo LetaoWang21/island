@@ -1,0 +1,18 @@
+# 依赖
+node_modules/
+
+# 构建产物：dist/ 需要保留（朋友下载后直接打开 dist/index.html 即可离线体验）
+
+# 系统与编辑器杂项
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+npm-debug.log*
+.idea/
+.vscode/
+*.swp
+
+# 临时文件
+.tmp/
+*.tmp

@@ -1,0 +1,1 @@
+{"name":"island","version":"1.0.0","private":true,"description":"A cinematic, offline tropical island in a single HTML","license":"MIT","scripts":{"build":"node build.mjs","test":"npm run build && node --test tests/*.test.cjs"},"dependencies":{"esbuild":"^0.24.0","three":"^0.170.0"}}

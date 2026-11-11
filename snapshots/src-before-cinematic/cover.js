@@ -1,0 +1,14 @@
+import {noiseGLSL,waveCode} from './shaders.js';
+// The loading cover shares the island ocean's wave math and shallow/deep palette.
+const canvas=document.getElementById('cover-sea'),gl=canvas.getContext('webgl',{alpha:false,antialias:false});
+if(gl){
+ const vertex='attribute vec2 position;varying vec2 vUv;void main(){vUv=position*.5+.5;gl_Position=vec4(position,0.,1.);}';
+ const fragment=`precision highp float;varying vec2 vUv;uniform float uTime,uWaves,uAspect;${noiseGLSL}${waveCode}
+void main(){vec2 uv=vUv-.5,p=uv*vec2(uAspect,1.)*25.;p.y+=uTime*.035;float e=.09;float dx=(fineWaves(p+vec2(e,0.))-fineWaves(p-vec2(e,0.)))/(2.*e),dz=(fineWaves(p+vec2(0.,e))-fineWaves(p-vec2(0.,e)))/(2.*e);vec3 N=normalize(vec3(-dx,1.,-dz)),V=normalize(vec3(.1,1.,.4));float depth=1.6+fbm(p*.055)*5.;vec3 col=mix(vec3(.025,.43,.35),vec3(.008,.065,.13),1.-exp(-depth*.18));col*=.82+fbm(p*.34)*.32;float c=pow(max(0.,sin(p.x*2.+sin(p.y*1.6+uTime*.3))*sin(p.y*2.1+sin(p.x*1.4-uTime*.27))),8.);col+=vec3(.15,.22,.12)*c*exp(-depth*.2)*.3;float fresnel=.04+pow(1.-max(0.,dot(N,V)),4.)*.8;col=mix(col,vec3(.35,.58,.68),fresnel*.7);vec3 H=normalize(normalize(vec3(-.48,.55,-.68))+V);col+=vec3(.3,.25,.17)*pow(max(0.,dot(N,H)),180.)*.8;col+=vec3(.22,.29,.31)*pow(max(0.,dot(N,H)),24.)*.18;col*=1.-dot(uv,uv)*.55;gl_FragColor=vec4(pow(max(col,vec3(0.)),vec3(.4545)),1.);}`;
+ const program=gl.createProgram();let valid=true;
+ for(const [type,source] of [[gl.VERTEX_SHADER,vertex],[gl.FRAGMENT_SHADER,fragment]]){const shader=gl.createShader(type);gl.shaderSource(shader,source);gl.compileShader(shader);if(!gl.getShaderParameter(shader,gl.COMPILE_STATUS))valid=false;gl.attachShader(program,shader);gl.deleteShader(shader);}
+ gl.linkProgram(program);valid=valid&&gl.getProgramParameter(program,gl.LINK_STATUS);
+ if(valid){gl.useProgram(program);const buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);const pos=gl.getAttribLocation(program,'position');gl.enableVertexAttribArray(pos);gl.vertexAttribPointer(pos,2,gl.FLOAT,false,0,0);const time=gl.getUniformLocation(program,'uTime'),aspect=gl.getUniformLocation(program,'uAspect');gl.uniform1f(gl.getUniformLocation(program,'uWaves'),.22);let last=0;
+ function draw(now){if(!document.getElementById('loading')){gl.deleteBuffer(buffer);gl.deleteProgram(program);gl.getExtension('WEBGL_lose_context')?.loseContext();return;}requestAnimationFrame(draw);if(now-last<45)return;last=now;const w=Math.min(innerWidth,1200),h=Math.round(w*innerHeight/innerWidth);if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h);}gl.uniform1f(time,now/1000);gl.uniform1f(aspect,w/h);gl.drawArrays(gl.TRIANGLES,0,3);}draw(performance.now());canvas.dataset.ready='true';
+ }else{canvas.dataset.error='shader';gl.deleteProgram(program);}
+}

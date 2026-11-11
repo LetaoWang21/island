@@ -1,0 +1,7 @@
+import {build} from 'esbuild';import fs from 'node:fs/promises';
+const result=await build({entryPoints:['src/main.js'],bundle:true,write:false,format:'iife',minify:true,target:['es2020'],legalComments:'inline'});
+await fs.mkdir('dist',{recursive:true});const license=await fs.readFile('LICENSE-THREE.txt','utf8');const shell=(await fs.readFile('src/shell.html','utf8')).replace('</head>',()=>`<!-- Three.js MIT License\n${license}\n--></head>`);const cover=await build({entryPoints:['src/cover.js'],bundle:true,write:false,format:'iife',minify:true,target:['es2020'],legalComments:'inline'});const coverJs=cover.outputFiles[0].text.replace(/<\/script/gi,'<\\/script');const js=result.outputFiles[0].text.replace(/<\/script/gi,'<\\/script');await fs.writeFile('dist/index.html',shell.replace('<!--COVER-->','').replace('<!--APP-->',()=>`<script>${coverJs}\n${js}</script>`));console.log('Built self-contained island HTML:',(await fs.stat('dist/index.html')).size,'bytes');
+
+// Keep the exact pre-refinement application as a reversible viewing option.
+const baseline=await fs.readFile('snapshots/before-art.html','utf8');
+await fs.writeFile('dist/baseline.html',baseline.replace('<select class="quality" id="quality"','<span style="display:flex;align-items:center;gap:14px"><a class="quality" href="index.html" style="text-decoration:none">查看优化版</a><select class="quality" id="quality"').replace('</select></div></footer>','</select></span></div></footer>'));

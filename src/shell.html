@@ -1,0 +1,190 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><meta name="description" content="一座属于你的海岛。"><title>ISLAND</title><style>
+:root{
+ --ink:#f5eee1;--soft:#f5eee1c2;--faint:#f5eee180;--gold:#ecd2a4;
+ --line:#fff3de26;--line-strong:#fff3de5c;
+ --glass:#0b131b57;--glass-strong:#0b131b99;
+ --serif:Georgia,"Times New Roman","Songti SC","Noto Serif CJK SC","Source Han Serif SC","STSong","SimSun",serif;
+ --sans:-apple-system,BlinkMacSystemFont,"PingFang SC","HarmonyOS Sans SC","MiSans","Microsoft YaHei UI","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+ --edge:44px;--bar:0px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;width:100%;overflow:hidden;background:#0a1017;color:var(--ink);font-family:var(--sans);font-weight:300;-webkit-font-smoothing:antialiased}
+button,select{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none;padding:0}
+button:focus-visible,select:focus-visible,a:focus-visible{outline:1px solid var(--gold);outline-offset:4px}
+[hidden]{display:none!important}
+#world{position:fixed;inset:0;display:block;width:100%;height:100%;touch-action:none}
+
+/* A faint scrim top and bottom keeps type legible over a bright sky without boxing it in. */
+.shade{position:fixed;inset:0;pointer-events:none;background:linear-gradient(180deg,#070b1466,#070b1400 24%,#070b1400 64%,#070b1494);transition:opacity 1.4s ease}
+.ui{position:fixed;z-index:5;transition:opacity 1.1s ease,transform 1.1s ease}
+body:not(.arrived) .ui:not(.welcome){opacity:0;pointer-events:none}
+body.clean .ui,body.touring .ui{opacity:0;pointer-events:none}
+/* While the fireworks play, everything but the wish and its two buttons leaves the frame. */
+body.fireworks .panel,body.fireworks .top,body.fireworks .bottom{opacity:0;pointer-events:none}
+body.clean .shade{opacity:0}
+
+.top{left:var(--edge);right:var(--edge);top:32px;display:flex;align-items:center;justify-content:space-between}
+.brand{font-family:var(--serif);font-size:15px;letter-spacing:.46em;text-shadow:0 1px 14px #070b1499}
+.tools{display:flex;gap:10px}
+.icon{width:38px;height:38px;border:1px solid var(--line);border-radius:50%;background:#0b131b3d;display:grid;place-items:center;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);transition:background .3s,border-color .3s}
+.icon:hover,.icon.active{background:#fff3de1f;border-color:var(--line-strong)}
+.icon svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.2}
+
+/* Title card: holds through the opening move, then leaves the frame to the island. */
+.welcome{left:var(--edge);top:clamp(116px,22vh,200px);pointer-events:none;transition:opacity 2.2s ease,transform 2.2s ease}
+.welcome h1{margin:0;font-family:var(--serif);font-weight:400;font-size:clamp(40px,4.8vw,68px);letter-spacing:.2em;line-height:1.3;text-shadow:0 2px 30px #070b148c}
+.welcome p{margin:18px 0 0;font-size:14px;letter-spacing:.42em;color:var(--soft);text-shadow:0 1px 14px #070b14a6}
+body.settled .welcome,body.celebrating .welcome{opacity:0;transform:translateY(-8px)}
+
+.panel{right:var(--edge);top:50%;transform:translateY(-50%);width:232px;padding:26px 24px 24px;background:var(--glass);border:1px solid var(--line);border-radius:4px;-webkit-backdrop-filter:blur(18px) saturate(1.15);backdrop-filter:blur(18px) saturate(1.15);box-shadow:0 24px 80px #05080e3d}
+.panel-title{margin:0 0 24px;font-family:var(--serif);font-weight:400;font-size:18px;letter-spacing:.18em}
+.label{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 11px;font-size:12px;letter-spacing:.3em;color:var(--soft)}
+.label small{font-family:var(--serif);font-size:13px;letter-spacing:.08em;color:var(--faint)}
+.seg{display:flex;gap:3px;padding:3px;margin-bottom:22px;border:1px solid var(--line);border-radius:3px}
+.seg button,.weather button{height:34px;font-size:13px;color:var(--soft);border:1px solid transparent;border-radius:2px;transition:background .3s,color .3s,border-color .3s}
+.seg button{flex:1;letter-spacing:.22em;text-indent:.22em}
+.weather{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.weather button{display:flex;align-items:center;justify-content:center;gap:8px;border-color:var(--line);letter-spacing:.12em}
+.weather svg{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:1.1}
+.seg button:hover,.weather button:hover{background:#fff3de12;color:var(--ink)}
+.seg button.active,.weather button.active{background:#fff3de24;color:var(--ink);border-color:var(--line-strong)}
+.weather-copy{margin:14px 0 0;min-height:42px;font-size:12px;line-height:1.75;letter-spacing:.08em;color:var(--faint)}
+.tour{width:100%;height:38px;margin-top:14px;display:flex;gap:10px;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:3px;font-size:13px;letter-spacing:.3em;color:var(--soft);transition:background .3s,color .3s}
+.tour svg{width:9px;height:9px;fill:currentColor}
+.tour:hover,.tour.active{background:#fff3de14;color:var(--ink)}
+.celebrate-button{width:100%;height:46px;margin-top:10px;border:1px solid #ecd2a48c;border-radius:3px;background:linear-gradient(180deg,#ecd2a433,#ecd2a414);color:var(--gold);font-family:var(--serif);font-size:17px;letter-spacing:.34em;text-indent:.34em;transition:background .3s}
+.celebrate-button:hover,.celebrate-button.active{background:#ecd2a43d}
+
+.bottom{left:var(--edge);right:var(--edge);bottom:28px;display:flex;align-items:center;justify-content:space-between;gap:24px;padding-top:18px;border-top:1px solid var(--line)}
+.locations{display:flex;gap:32px}
+.locations button{display:flex;align-items:baseline;gap:9px;padding:4px 0;font-size:13px;letter-spacing:.24em;color:var(--faint);border-bottom:1px solid transparent;transition:color .3s,border-color .3s}
+.locations small{font-family:var(--serif);font-style:italic;font-size:12px;letter-spacing:.04em}
+.locations button:hover{color:var(--ink)}
+.locations button.active{color:var(--ink);border-bottom-color:var(--gold)}
+.aside{display:flex;align-items:center;gap:22px;font-size:12px;letter-spacing:.14em;color:var(--faint)}
+.hint{display:flex;gap:18px}
+.key{display:inline-grid;place-items:center;min-width:19px;height:18px;margin-right:6px;padding:0 4px;border:1px solid var(--line-strong);border-radius:2px;font-size:10px;font-style:normal;letter-spacing:0}
+.quality{-webkit-appearance:none;appearance:none;border:0;background:none;color:var(--faint);font-size:12px;letter-spacing:.14em;cursor:pointer}
+.quality option{background:#141c24;color:var(--ink)}
+
+.location-note{left:var(--edge);bottom:102px;pointer-events:none;text-shadow:0 1px 16px #070b14a6}
+.location-note strong{display:block;margin-bottom:9px;font-family:var(--serif);font-weight:400;font-size:22px;letter-spacing:.24em}
+.location-note span{font-size:10px;letter-spacing:.34em;color:var(--faint)}
+body.celebrating .location-note{opacity:0}
+
+/* Narration is set like a film subtitle: no box, just type over the picture. */
+#toast{position:fixed;left:50%;bottom:calc(var(--bar) + 104px);z-index:9;max-width:min(86vw,720px);transform:translate(-50%,8px);text-align:center;font-family:var(--serif);font-size:19px;line-height:1.8;letter-spacing:.16em;color:var(--ink);text-shadow:0 1px 3px #05080ed9,0 2px 22px #05080ebf;pointer-events:none;opacity:0;transition:opacity .9s ease,transform .9s ease}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+body.touring #toast{bottom:calc(var(--bar) + 26px)}
+
+/* The tour plays in scope: bars slide in and shots cross through black. */
+.bar{position:fixed;left:0;right:0;height:var(--bar);background:#04060a;z-index:4;pointer-events:none;transition:height 1.4s cubic-bezier(.6,0,.2,1)}
+.bar-top{top:0}.bar-bottom{bottom:0}
+body.touring{--bar:max(7vh,calc((100vh - 100vw / 2.39) / 2))}
+#fade{position:fixed;inset:0;z-index:3;background:#04060a;opacity:0;pointer-events:none;transition:opacity .7s ease}
+#fade.on{opacity:1}
+.tour-hint{position:fixed;left:0;right:0;bottom:0;height:var(--bar);z-index:6;display:grid;place-items:center;font-size:11px;letter-spacing:.4em;color:var(--faint);opacity:0;pointer-events:none;transition:opacity 1.2s ease .6s}
+body.touring .tour-hint{opacity:1}
+
+.party-card{left:var(--edge);bottom:102px;width:320px;padding:30px 28px 26px;background:var(--glass-strong);border:1px solid #ecd2a440;border-radius:4px;-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);box-shadow:0 24px 80px #05080e59}
+.party-card h2{margin:0 0 10px;font-family:var(--serif);font-weight:400;font-size:26px;letter-spacing:.2em;line-height:1.5}
+.party-card p{margin:0 0 22px;font-size:13px;line-height:1.9;letter-spacing:.1em;color:var(--soft)}
+.party-close{position:absolute;right:10px;top:8px;width:30px;height:30px;font-size:20px;line-height:1;color:var(--faint)}
+.party-close:hover{color:var(--ink)}
+.party-action{width:100%;height:42px;border:1px solid #ecd2a48c;border-radius:3px;background:#ecd2a424;color:var(--gold);font-family:var(--serif);font-size:15px;letter-spacing:.34em;text-indent:.34em;transition:background .3s}
+.party-action:hover{background:#ecd2a43d}
+.celebration-finale .party-card{display:flex;align-items:center;gap:6px;width:auto;padding:8px 8px 8px 10px;background:var(--glass);border-color:var(--line)}
+.celebration-finale .party-card h2,.celebration-finale .party-card p{display:none}
+.celebration-finale .party-action{width:168px;height:36px;font-size:13px}
+.celebration-finale .party-close{position:static}
+
+.celebration-title{z-index:6;top:15%;left:50%;transform:translate(-50%,12px);opacity:0;pointer-events:none;text-align:center;white-space:nowrap;text-shadow:0 2px 40px #070b14d9;transition:opacity 2.2s ease,transform 2.2s ease}
+.celebration-title.show{opacity:1;transform:translate(-50%,0)}
+.celebration-title .title-main{font-family:var(--serif);font-size:clamp(34px,5.4vw,80px);letter-spacing:.34em;text-indent:.34em;line-height:1.3;color:#fff4dc}
+.celebration-title span{display:block;margin-top:16px;font-family:Georgia,"Times New Roman",serif;font-style:italic;font-size:clamp(15px,1.7vw,24px);letter-spacing:.14em;color:var(--gold)}
+
+#restore{position:fixed;bottom:26px;right:26px;z-index:10;display:none;opacity:.55}
+#restore:hover{opacity:1}
+body.clean #restore{display:grid}
+
+#help{display:none;position:fixed;inset:0;z-index:20;align-items:center;justify-content:center;background:#070b14b8;-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+#help.open{display:flex}
+.help-card{width:480px;max-width:88vw;max-height:88vh;overflow:auto;padding:38px 38px 28px;background:#0f1820e0;border:1px solid var(--line);border-radius:4px}
+.help-card h2{margin:0 0 24px;font-family:var(--serif);font-weight:400;font-size:24px;letter-spacing:.24em}
+.help-card dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:14px 20px;font-size:13px;line-height:1.85;color:var(--soft)}
+.help-card dt{color:var(--gold);letter-spacing:.2em;white-space:nowrap}
+.help-card dd{margin:0}
+.help-card button{width:100%;height:42px;margin-top:28px;border:1px solid var(--line-strong);border-radius:3px;font-size:13px;letter-spacing:.4em;text-indent:.4em;transition:background .3s}
+.help-card button:hover{background:#fff3de14}
+.help-card a{display:block;margin-top:16px;text-align:center;font-size:11px;letter-spacing:.2em;color:var(--faint);text-decoration:none}
+.help-card a:hover{color:var(--ink)}
+
+#loading{position:fixed;inset:0;z-index:30;isolation:isolate;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse at 30% 30%,#3b2c34,#0a1017 75%);transition:opacity 1.8s ease}
+#cover-sea{position:absolute;inset:0;z-index:-2;width:100%;height:100%;pointer-events:none}
+#loading:before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(ellipse at center,#0a101700 20%,#0a1017b8)}
+.load-brand{font-family:var(--serif);font-size:clamp(34px,4.4vw,58px);letter-spacing:.3em;text-indent:.3em;line-height:1.4;text-shadow:0 2px 26px #070b14b3}
+.load-caption{margin:18px 0 0;font-size:13px;letter-spacing:.5em;text-indent:.5em;color:var(--soft);text-shadow:0 1px 14px #070b14b3}
+.load-line{width:120px;height:1px;margin-top:40px;background:#fff3de33;overflow:hidden}
+.load-line:after{content:"";display:block;width:50px;height:1px;background:var(--gold);animation:load 1.8s ease-in-out infinite}
+@keyframes load{from{transform:translateX(-50px)}to{transform:translateX(120px)}}
+#loadMsg{max-width:80vw;margin-top:18px;text-align:center;font-size:11px;letter-spacing:.3em;text-indent:.3em;color:var(--faint)}
+
+@media(pointer:coarse){.hint{display:none}}
+@media(max-width:800px){
+ :root{--edge:18px}
+ .top{top:18px}
+ .brand{font-size:13px}
+ .icon{width:34px;height:34px}
+ .welcome{top:88px}
+ .welcome h1{font-size:36px}
+ .welcome p{margin-top:12px;font-size:12px;letter-spacing:.32em}
+ /* On a phone the settings fold into a two-row strip above the place names. */
+ .panel{left:var(--edge);right:var(--edge);top:auto;bottom:66px;transform:none;width:auto;padding:10px;display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:center}
+ .panel-title,.label,.weather-copy{display:none}
+ .seg{margin:0}
+ .seg button{height:34px;padding:0 13px}
+ .weather{grid-template-columns:repeat(4,1fr)}
+ .weather button{font-size:0;gap:0}
+ .weather svg{width:17px;height:17px}
+ .tour,.celebrate-button{height:40px;margin:0}
+ .tour{font-size:12px;letter-spacing:.16em}
+ .celebrate-button{font-size:16px}
+ .bottom{bottom:14px;padding-top:0;border-top:0}
+ .locations{width:100%;justify-content:space-between;gap:6px}
+ .locations small{display:none}
+ .locations button{font-size:12px;letter-spacing:.12em}
+ .aside,.location-note{display:none}
+ #toast{bottom:calc(var(--bar) + 196px);font-size:16px;letter-spacing:.1em}
+ body.touring #toast{bottom:calc(var(--bar) + 18px)}
+ .party-card{left:var(--edge);right:var(--edge);bottom:66px;width:auto;padding:24px 20px 18px}
+ .party-card h2{font-size:22px}
+ .celebration-finale .party-card{right:auto}
+ body.celebrating .panel{display:none}
+ body.celebrating #toast{bottom:calc(var(--bar) + 260px)}
+ .celebration-title{top:13%}
+ .help-card{padding:28px 24px 22px}
+ .help-card dl{grid-template-columns:1fr;gap:4px}
+ .help-card dd{margin-bottom:10px}
+}
+@media(min-width:801px) and (max-height:640px){
+ .panel{padding:16px 20px}
+ .panel-title,.weather-copy{display:none}
+ .seg{margin-bottom:14px}
+ .welcome{top:86px}
+ .location-note{display:none}
+}
+</style></head><body>
+<canvas id="world" aria-label="三维海岛场景"></canvas><div class="shade"></div><div id="fade"></div><div class="bar bar-top"></div><div class="bar bar-bottom"></div><div class="tour-hint">轻触画面，结束巡游</div>
+<header class="ui top"><div class="brand">ISLAND</div><div class="tools"><button class="icon" id="sound" aria-label="开启海岛环境音" aria-pressed="false" title="海岛环境音"><svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4ZM17 9l5 6m0-6-5 6"/></svg></button><button class="icon" id="hide" aria-label="隐藏界面" title="纯净画面 H"><svg viewBox="0 0 24 24"><path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="2.5"/></svg></button><button class="icon" id="help-open" aria-label="操作说明" title="操作说明"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 8.5a2.5 2.5 0 0 1 5 0c0 2-2.5 2-2.5 4M12 16v1"/></svg></button></div></header>
+<section class="ui welcome" aria-label="欢迎上岛"><h1>欢迎上岛</h1><p>这里一切都属于你</p></section>
+<aside class="ui panel" aria-label="海岛环境设置"><h2 class="panel-title">属于你的海岛时光</h2><div class="label"><span>天色</span><small id="time-label">17:48</small></div><div class="seg"><button id="day" class="active" aria-pressed="true">黄昏</button><button id="night" aria-pressed="false">夜幕</button></div><div class="label"><span>天气</span></div><div class="weather"><button id="clear" class="active" aria-pressed="true" aria-label="晴天"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 1v3m0 16v3M1 12h3m16 0h3M4 4l2 2m12 12 2 2M4 20l2-2M18 6l2-2"/></svg>晴天</button><button id="drizzle" aria-pressed="false" aria-label="小雨"><svg viewBox="0 0 24 24"><path d="M5 14a4 4 0 1 1 1-8 5 5 0 0 1 10 2 3 3 0 1 1 2 6ZM8 17l-1 3m8-3-1 3"/></svg>小雨</button><button id="rain" aria-pressed="false" aria-label="中雨"><svg viewBox="0 0 24 24"><path d="M5 14a4 4 0 1 1 1-8 5 5 0 0 1 10 2 3 3 0 1 1 2 6ZM7 17l-1 4m6-4-1 4m6-4-1 4"/></svg>中雨</button><button id="storm" aria-pressed="false" aria-label="暴雨"><svg viewBox="0 0 24 24"><path d="M5 14a4 4 0 1 1 1-8 5 5 0 0 1 10 2 3 3 0 1 1 2 6ZM6 17l-1 4m14-4-1 4m-6-6-3 5h4l-3 4"/></svg>暴雨</button></div><p class="weather-copy" id="weather-copy">海风轻拂，落日在浅滩上流动。</p><button id="tour" class="tour" aria-pressed="false"><svg viewBox="0 0 12 12"><path d="m3 2 7 4-7 4Z"/></svg><span>电影巡游</span></button><button id="celebrate" class="celebrate-button" aria-pressed="false"><span>为你庆生</span></button></aside>
+<section class="ui party-card" id="party-card" aria-label="生日庆祝" hidden><button id="party-close" class="party-close" aria-label="结束庆祝">×</button><h2 id="party-heading">生日快乐</h2><p id="party-copy">蛋糕已经备好了，先把蜡烛点上。</p><button id="party-action" class="party-action">点亮蜡烛</button><button id="party-restart" class="party-action" hidden>再庆祝一次</button></section>
+<div class="ui celebration-title" id="celebration-title" aria-live="polite"><div class="title-main" id="wish-title">生日快乐</div><span>Happy Birthday</span></div>
+<div class="ui location-note"><strong id="place-name">珊瑚海湾</strong><span id="place-en">THE LAGOON · ARRIVAL</span></div>
+<footer class="ui bottom"><nav class="locations" aria-label="海岛地点"><button data-place="lagoon" class="active"><small>01</small>珊瑚海湾</button><button data-place="palms"><small>02</small>棕榈沙岸</button><button data-place="lighthouse"><small>03</small>灯塔高地</button><button data-place="pier"><small>04</small>海风栈桥</button></nav><div class="aside"><div class="hint" id="hint"><span>拖动环顾</span><span>滚轮缩放</span><span><i class="key">H</i>纯净画面</span></div><select class="quality" id="quality" aria-label="画质"><option value="high">画质 · 精细</option><option value="low">画质 · 流畅</option></select></div></footer>
+<div id="toast" role="status" aria-live="polite"></div><button id="restore" class="icon" aria-label="显示界面"><svg viewBox="0 0 24 24"><path d="M4 8V4h4m8 0h4v4m0 8v4h-4m-8 0H4v-4"/></svg></button>
+<div id="help"><div class="help-card"><h2>把时间，留给海岛</h2><dl><dt>自由参观</dt><dd>拖动旋转，滚轮缩放，右键拖动平移；触屏单指旋转，双指缩放和平移。</dd><dt>天气故事</dt><dd>小雨时在栈桥看海，中雨时到凉亭听雨，暴雨时望向灯塔；黄昏雨停后，海上会有一段彩虹。</dd><dt>电影巡游</dt><dd>镜头会带你绕岛走一圈；轻触画面，随时接管。</dd><dt>为你庆生</dt><dd>点亮蜡烛，许一个愿，再轻轻吹灭；也可以直接点蛋糕。</dd><dt>快捷键</dt><dd>N 黄昏与夜幕，F 天气，H 纯净画面，R 回到海湾，Esc 关闭。</dd></dl><button id="help-close">走向海风</button><a href="baseline.html">查看最初版本</a></div></div>
+<div id="loading"><canvas id="cover-sea" aria-hidden="true"></canvas><div class="load-brand">欢迎上岛</div><p class="load-caption">这里一切都属于你</p><div class="load-line"></div><div id="loadMsg">正在等一阵海风</div></div>
+<script>window.addEventListener('error',function(e){var n=document.getElementById('loadMsg');if(n)n.textContent='加载遇到问题：'+e.message+'。请使用支持 WebGL 2 的现代浏览器。';});</script>
+<!--COVER--><!--APP--></body></html>
